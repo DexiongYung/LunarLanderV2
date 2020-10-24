@@ -11,7 +11,6 @@ for gamma in gammas:
     file.write(f'#SBATCH --job-name={name}\n')
     file.write('#SBATCH --time=10-20:00:00\n')
     file.write('#SBATCH --partition=blackboxml\n')
-    file.write('#SBATCH --mem=8G\n')
     file.write('#SBATCH --mail-user=yungdexiong@gmail.com\n')
     file.write('#SBATCH --mail-type=begin\n')
     file.write('#SBATCH --mail-type=begin\n')
