@@ -9,8 +9,6 @@ for gamma in gammas:
     file = open(f'/ubc/cs/research/plai-scratch/virtuecc/launch/{name}.sh', "w+")
     file.write('#!/bin/bash\n')
     file.write(f'#SBATCH --job-name={name}\n')
-    file.write('#SBATCH --nodes=1\n')
-    file.write('#SBATCH --cpus-per-task=4\n')
     file.write('#SBATCH --time=10-20:00:00\n')
     file.write('#SBATCH --partition=blackboxml\n')
     file.write('#SBATCH --mem=8G\n')
@@ -24,7 +22,7 @@ for gamma in gammas:
     file.write(
         'source /ubc/cs/research/plai-scratch/virtuecc/venv/rl/bin/activate\n')
     file.write(
-        'cd /ubc/cs/research/plai-scratch/virtuecc/GitHub/automl-ensemble-system/metaAutoML\n')
+        'cd /ubc/cs/research/plai-scratch/virtuecc/GitHub/LunarLanderV2\n')
     file.write(
         f'python3 experiment.py --gamma={gamma}\n')
     file.close()
