@@ -11,7 +11,7 @@ from keras.optimizers import Adam
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', help='batch_size', type=int, default=128)
 parser.add_argument('--lookback_depth',
-                    help='Depth of lookback for experience replay', type=int, default=500)
+                    help='Depth of lookback for experience replay', type=int, default=30000)
 parser.add_argument(
     '--num_learn', help='Number of independent batches for fitting model each step', type=int, default=1)
 parser.add_argument(
@@ -21,7 +21,7 @@ parser.add_argument(
 parser.add_argument('--test_threshold',
                     help='Number of episodes before printing and test', type=int, default=200)
 parser.add_argument(
-    '--model_ll_1', help='Width of lienar layer 1', type=int, default=124)
+    '--model_ll_1', help='Width of linear layer 1', type=int, default=124)
 parser.add_argument(
     '--model_ll_2', help='Width of linear layer 2', type=int, default=248)
 parser.add_argument('--max_num_episodes',
@@ -29,9 +29,7 @@ parser.add_argument('--max_num_episodes',
 parser.add_argument('--max_test_episodes',
                     help='Max test episodes', type=int, default=100)
 parser.add_argument(
-    '--min_epsilon', help='Minimum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=0.1)
-parser.add_argument(
-    '--max_epsilon', help='Maximum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=1.0)
+    '--epsilon', help='Maximum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=1.0)
 parser.add_argument(
     '--epsilon_decay', help='Maximum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=0.999)
 parser.add_argument(
@@ -39,7 +37,7 @@ parser.add_argument(
 parser.add_argument(
     '--is_verbose', help='Should print test results?', type=bool, default=True)
 parser.add_argument(
-    '--LR', help='Learning rate of model', type=float, default=0.001)
+    '--LR', help='Learning rate of model', type=float, default=10e-6)
 args = parser.parse_args()
 
 
@@ -51,8 +49,7 @@ if __name__ == '__main__':
     lookback_depth = args.lookback_depth
     batch_size = args.batch_size
     num_episodes = args.max_num_episodes
-    eps = args.max_epsilon
-    min_eps = args.min_epsilon
+    eps = args.epsilon
     eps_decay = args.epsilon_decay
     is_verbose = args.is_verbose
     gamma = args.gamma
@@ -63,7 +60,7 @@ if __name__ == '__main__':
     max_test_ep = args.max_test_episodes
     save_dir = args.save_dir
 
-    # create model from a scratch
+    # Create Model
     model = Sequential()
     model.add(
         Dense(model_ll_1, input_shape=env.observation_space.shape, activation='relu'))
@@ -71,17 +68,16 @@ if __name__ == '__main__':
     model.add(Dense(env.action_space.n, activation='linear'))
     model.compile(loss='mean_squared_error', optimizer=Adam(lr=args.LR))
 
-    # create agent
+    # Create Agent
     ll = LunarLander(model=model, env=env, name=name,
                      test_threshold=test_threshold)
 
-    # let's learn
+    # Begin training
     train_rewards, train_last_rewards = ll.train(
         num_episodes=num_episodes,
         num_learn=num_learn,
         epochs=epoch,
         eps=eps,
-        min_eps=min_eps,
         epsilon_decay=eps_decay,
         verbose=is_verbose,
         lookback_depth=lookback_depth,
@@ -89,6 +85,7 @@ if __name__ == '__main__':
         gamma=gamma,
     )
 
+    # Begin Test
     test_rewards, test_last_rewards = ll.test(max_test_ep)
 
     num_episodes = ll.episodes_till_solved

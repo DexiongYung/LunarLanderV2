@@ -6,11 +6,12 @@ gammas = [0.1, 0.3, 0.5, 0.7, 0.9, 1]
 
 for gamma in gammas:
     name = f'exp_gamma_{gamma}'
-    file = open(f'/ubc/cs/research/plai-scratch/virtuecc/launch/{name}.sh', "w+")
+    file = open(
+        f'/ubc/cs/research/plai-scratch/virtuecc/launch/{name}.sh', "w+")
     file.write('#!/bin/bash\n')
     file.write(f'#SBATCH --job-name={name}\n')
     file.write('#SBATCH --time=10-20:00:00\n')
-    file.write('#SBATCH --partition=blackboxml\n')
+    file.write('#SBATCH --partition=plai_cpus\n')
     file.write('#SBATCH --mail-user=yungdexiong@gmail.com\n')
     file.write('#SBATCH --mail-type=begin\n')
     file.write('#SBATCH --mail-type=begin\n')
