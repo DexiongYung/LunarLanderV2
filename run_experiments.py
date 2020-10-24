@@ -9,18 +9,18 @@ for gamma in gammas:
     file = open(f'/ubc/cs/research/plai-scratch/virtuecc/launch/{name}.sh', "w+")
     file.write('#!/bin/bash\n')
     file.write(f'#SBATCH --job-name={name}\n')
+    file.write('#SBATCH --nodes=1\n')
     file.write('#SBATCH --cpus-per-task=4\n')
-    file.write('#SBATCH --time=00-04:10     # time (DD-HH:MM) \n')
-    file.write('#SBATCH --partition=plai\n')
-    file.write('#SBATCH --gres=gpu:1\n')
+    file.write('#SBATCH --time=10-20:00:00\n')
+    file.write('#SBATCH --partition=blackboxml\n')
     file.write('#SBATCH --mem=8G\n')
     file.write('#SBATCH --mail-user=yungdexiong@gmail.com\n')
     file.write('#SBATCH --mail-type=begin\n')
     file.write('#SBATCH --mail-type=begin\n')
     file.write(
-        f'#SBATCH --error=/logs/{name}.err\n')
+        f'#SBATCH --error=logs/{name}.err\n')
     file.write(
-        f'#SBATCH --output=/logs/{name}.out\n')
+        f'#SBATCH --output=logs/{name}.out\n\n')
     file.write(
         'source /ubc/cs/research/plai-scratch/virtuecc/venv/rl/bin/activate\n')
     file.write(
