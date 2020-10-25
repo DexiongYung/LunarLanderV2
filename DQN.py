@@ -228,7 +228,7 @@ env = gym.make('LunarLander-v2')
 for file in os.listdir('weights'):
     print(f'Running {file}')
     dqn_agent = DQNAgent(name, env, seed=0)
-    dqn_agent.q_network.load_state_dict(torch.load(f'weights/{file}'))
+    dqn_agent.q_network.load_state_dict(torch.load(f'weights/{file}',map_location=torch.device('cpu')))
     scores = dqn_agent.test(MAX_TEST_EPISODES)
     name = file.replace('pth','')
     data = {}
