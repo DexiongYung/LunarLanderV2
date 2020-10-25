@@ -6,13 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 
-# End/Ground state scores
 SOLVED = 200
-NEGATIVE_REWARD = 0
-CRASH_REWARD = -100
-NEGATIVE_LAST_REWARD = 0
-REST_REWARD = 100
-
 
 class LunarLander(object):
     def __init__(self, model, env, name, test_threshold, min_memory=2**6):
@@ -28,10 +22,10 @@ class LunarLander(object):
         self._model_ = model
 
         # If inf then not solved yet
-        self.episodes_till_solved = float('inf')
+        self.num_training_episodes_till_solved = float('inf')
 
         # Counter of training episodes
-        self.episodes = 0
+        self.num_training_episodes = 0
 
         # numpy arrays to save history
         self.replay_memory = dict()
@@ -66,11 +60,11 @@ class LunarLander(object):
 
     # Get batch
     def _get_batch_(self, **kwargs):
-        # if no memory, return nothing
+        # No memory, return nothing
         if self.replay_memory['len'] == 0:
             return None
 
-        # Check if replay memory to small
+        # Check if replay memory too small
         if self.replay_memory['len'] < kwargs['lookback_depth']:
             lookback_depth = self.replay_memory['len']
         else:
@@ -100,10 +94,8 @@ class LunarLander(object):
         reward = np.append(reward[indexes], self.replay_memory['reward'][-1])
         done = np.append(done[indexes], self.replay_memory['done'][-1])
 
-        # Predict rewards using a model
+        # Add rewards and factor in future discounting(gamma)
         h_rewards = self._model_.predict(state)
-
-        # Add rewards
         h_rewards[np.arange(len(h_rewards)), action] = reward
         h_rewards[~done, action[~done]] += kwargs['gamma'] * \
             np.max(self._model_.predict(next_state[~done]), axis=1)
@@ -112,15 +104,15 @@ class LunarLander(object):
 
     # Output current status
     def print_result(self, **kwargs):
-        rewards = kwargs["rewards"]
-        if rewards <= 0:
+        reward = kwargs["reward_sum"]
+        if reward <= 0:
             ind = ' - '
-        elif rewards >= SOLVED:
+        elif reward >= SOLVED:
             ind = ' * '
         else:
             ind = ' + '
         print(
-            f'{self.name} {ind} {self.episodes} {int(rewards)} {kwargs["last_reward"]:.0f} {kwargs["eps"]:.3f}')
+            f'{self.name} {ind} {self.num_training_episodes} {int(reward)} {kwargs["last_reward"]:.0f} {kwargs["eps"]:.3f}')
 
     def train(self, **kwargs):
         # Arrays to save rewards and last rewards
@@ -128,33 +120,38 @@ class LunarLander(object):
         last_rewards = np.empty((0), dtype=np.float)
 
         for i in range(kwargs['num_episodes']):
+            # Decay epsilon to lower exploration
             kwargs['eps'] *= kwargs['epsilon_decay']
-            episode_rewards, r = self.execute_episode(**kwargs)
 
-            # update counters of agent learning
-            self.episodes += 1
-            rewards = np.append(rewards, episode_rewards)
-            last_rewards = np.append(last_rewards, r)
+            # Run episode
+            episode_reward_sum, last_reward = self.execute_training_episode(
+                **kwargs)
+
+            # Update num training episodes and reward arrays
+            self.num_training_episodes += 1
+            rewards = np.append(rewards, episode_reward_sum)
+            last_rewards = np.append(last_rewards, last_reward)
 
             if kwargs['verbose']:
-                self.print_result(rewards=episode_rewards,
-                                  last_reward=r, **kwargs)
+                self.print_result(reward_sum=episode_reward_sum,
+                                  last_reward=last_reward, **kwargs)
 
             # Game is solved if 100 consecutive episodes average at least 200
             if len(rewards) > 99 and np.mean(rewards[-100:]) > SOLVED - 1:
-                self.episodes_till_solved = self.episodes
+                self.num_training_episodes_till_solved = self.num_training_episodes
                 break
 
         return rewards, last_rewards
 
-    def execute_episode(self, **kwargs):
+    def execute_training_episode(self, **kwargs):
+        # Start new lunar lander
         s = self._env_.reset()
-        done = False
         episode_rewards = 0
+        is_done = False
         step = 1
 
-        # Run 1 episode
-        while not done:
+        while not is_done:
+            # Get next action values
             reshaped_s = s.reshape(1, -1)
             s_pred = self._model_.predict(reshaped_s)[0]
 
@@ -165,22 +162,23 @@ class LunarLander(object):
                 a = np.argmax(s_pred)
 
             # Execute action
-            next_s, r, done, _ = self._env_.step(a)
+            next_s, r, is_done, _ = self._env_.step(a)
 
-            # Add to experience replay
+            # Add step to experience replay
             self.add_history(
                 step=step,
                 state=s,
                 action=a,
                 reward=r,
                 next_state=next_s,
-                done=done
+                done=is_done
             )
 
+            # Set state and sum rewards
             s = next_s
-
-            # update counters of the episode
             episode_rewards += r
+
+            # Update counters
             step += 1
             self.replay_memory['episode'] += 1
 
@@ -191,24 +189,25 @@ class LunarLander(object):
         return episode_rewards, r
 
     def test(self, num_episodes):
-        # Initialize arrays to save rewards and last rewards
+        # Initialize rewards storage
         rewards = np.empty((0), dtype=np.float)
         last_rewards = np.empty((0), dtype=np.float)
 
         for i in range(num_episodes):
+            # Restart Lunar Lander
             s = self._env_.reset()
-            done = False
+            is_done = False
             episode_rewards = 0
-            step = 1
 
-            while not done:
+            # Execute episode with greedy action selection
+            while not is_done:
                 reshaped_s = s.reshape(1, -1)
                 s_pred = self.self._model_.predict(reshaped_s)[0]
                 a = np.argmax(s_pred)
-                s, r, done, _ = self._env_.step(a)
+                s, r, is_done, _ = self._env_.step(a)
                 episode_rewards += r
-                step += 1
 
+            # Update reward arrays
             rewards = np.append(rewards, episode_rewards)
             last_rewards = np.append(last_rewards, r)
 

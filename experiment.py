@@ -21,23 +21,23 @@ parser.add_argument(
 parser.add_argument('--test_threshold',
                     help='Number of episodes before printing and test', type=int, default=200)
 parser.add_argument(
-    '--model_ll_1', help='Width of linear layer 1', type=int, default=124)
+    '--model_ll_1', help='Width of linear layer 1', type=int, default=128)
 parser.add_argument(
-    '--model_ll_2', help='Width of linear layer 2', type=int, default=248)
+    '--model_ll_2', help='Width of linear layer 2', type=int, default=64)
 parser.add_argument('--max_num_episodes',
-                    help='Max number of episodes', type=int, default=4000)
+                    help='Max number of episodes', type=int, default=2000)
 parser.add_argument('--max_test_episodes',
                     help='Max test episodes', type=int, default=100)
 parser.add_argument(
-    '--epsilon', help='Maximum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=1.0)
+    '--epsilon', help='Percent chance of exploration', type=float, choices=[Range(0.0, 1.0)], default=1.0)
 parser.add_argument(
-    '--epsilon_decay', help='Maximum epsilon for exploration', type=float, choices=[Range(0.0, 1.0)], default=0.999)
+    '--epsilon_decay', help='Decay of epsilon as Q is learned', type=float, choices=[Range(0.0, 1.0)], default=0.998)
 parser.add_argument(
     '--gamma', help='Future discount rate', type=float, choices=[Range(0.0, 1.0)], default=1)
 parser.add_argument(
     '--is_verbose', help='Should print test results?', type=bool, default=True)
 parser.add_argument(
-    '--LR', help='Learning rate of model', type=float, default=10e-6)
+    '--LR', help='Learning rate of model', type=float, default=0.0001)
 args = parser.parse_args()
 
 
