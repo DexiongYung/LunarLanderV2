@@ -1,7 +1,6 @@
 import random
 import sys
 import json
-from time import time
 from collections import deque, defaultdict, namedtuple
 from my_range import Range
 import numpy as np
@@ -15,6 +14,10 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--gamma', help='Future discount rate',
                     type=float, choices=[Range(0.0, 1.0)], default=1)
+parser.add_argument('--LR', help='Learning Rate',
+                    type=float, default=1e-4)
+parser.add_argument('--decay', help='Learning Rate',
+                    type=float, default=0.999)
 args = parser.parse_args()
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -219,7 +222,7 @@ BUFFER_SIZE = int(1e5)  # Replay memory size
 BATCH_SIZE = 64         # Number of experiences to sample from memory
 GAMMA = args.gamma      # Discount factor
 TAU = 1e-3              # Soft update parameter for updating fixed q network
-LR = 1e-4               # Q Network learning rate
+LR = args.LR               # Q Network learning rate
 UPDATE_EVERY = 4        # How often to update Q network
 MAX_EPISODES = 2000  # Max number of episodes to play
 MAX_STEPS = 1000     # Max steps allowed in a single episode/play
@@ -228,16 +231,15 @@ ENV_SOLVED = 200     # MAX score at which we consider environment to be solved
 # Epsilon schedule
 
 EPS_START = 1.0      # Default/starting value of eps
-EPS_DECAY = 0.999    # Epsilon decay rate
+EPS_DECAY = args.decay    # Epsilon decay rate
 EPS_MIN = 0.01       # Minimum epsilon
 
 env = gym.make('LunarLander-v2')
-name = f'weights/solved_200_{GAMMA}'
+name = f'g{GAMMA}_lr{LR}_decay_{EPS_DECAY}'
 state_size = env.observation_space.shape[0]
 action_size = env.action_space.n
 dqn_agent = DQNAgent(state_size, action_size, seed=0)
 
-start = time()
 scores = []
 # Maintain a list of last 100 scores
 scores_window = deque(maxlen=100)
@@ -259,20 +261,17 @@ for episode in range(1, MAX_EPISODES + 1):
 
     mean_score = np.mean(scores_window)
     scores.append(score)
+    dqn_agent.checkpoint(f'weights/{name}.pth')
 
     if mean_score >= ENV_SOLVED:
         num_episodes = episode
-        dqn_agent.checkpoint(f'{name}.pth')
         break
 
     scores_window.append(score)
 
-end = time()
-print('Took {} seconds'.format(end - start))
 data = {}
 data['episodes'] = num_episodes
 data['scores'] = scores
-data['time'] = end - start
 
 with open(f'data/{name}.txt', 'w') as outfile:
     json.dump(data, outfile)
