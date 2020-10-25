@@ -224,7 +224,7 @@ GAMMA = args.gamma      # Discount factor
 TAU = 1e-3              # Soft update parameter for updating fixed q network
 LR = args.LR               # Q Network learning rate
 UPDATE_EVERY = 4        # How often to update Q network
-MAX_EPISODES = 2000  # Max number of episodes to play
+MAX_EPISODES = 5000  # Max number of episodes to play
 MAX_STEPS = 1000     # Max steps allowed in a single episode/play
 ENV_SOLVED = 200     # MAX score at which we consider environment to be solved
 
@@ -258,6 +258,8 @@ for episode in range(1, MAX_EPISODES + 1):
             break
 
         eps = max(eps * EPS_DECAY, EPS_MIN)
+    
+    print(f'episode: {episode}, score:{score}')
 
     mean_score = np.mean(scores_window)
     scores.append(score)
