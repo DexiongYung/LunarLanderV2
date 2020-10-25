@@ -24,7 +24,7 @@ for gamma in gammas:
     file.write(
         'cd /ubc/cs/research/plai-scratch/virtuecc/GitHub/LunarLanderV2\n')
     file.write(
-        f'python3 run_Q.py --gamma={gamma}\n')
+        f'python3 Q_network.py --gamma={gamma}\n')
     file.close()
 
     command = f'sbatch {file.name}'
